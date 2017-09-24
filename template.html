@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+  <title>Crawlers stats</title>
+  <!-- Bootstrap core CSS -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="container">
+  <h1>Crawlers stats</h1>
+  <p class="lead">Period: {{from}} - {{to}}</p>
+  <div>
+    <table class="table table-bordered">
+      <tbody>
+      <tr>
+        <td>Crawlers</td>
+        <td>{{totalStats.crawlersCount}}</td>
+      </tr>
+      <tr>
+        <td>Executions</td>
+        <td>{{totalStats.executionsCount}}</td>
+      </tr>
+      <tr>
+        <td>Crawled Pages</td>
+        <td>{{totalStats.stats.pagesCrawled}}</td>
+      </tr>
+      <tr>
+        <td>Pages Failed</td>
+        <td>{{totalStats.stats.pagesFailed}}</td>
+      </tr>
+      <tr>
+        <td>Pages Crashed</td>
+        <td>{{totalStats.stats.pagesCrashed}}</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <h2>By crawler</h2>
+  <div>
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>CustomId</th>
+        <th>Executions</th>
+        <th>Crawled Pages</th>
+        <th>Pages Failed</th>
+        <th>Pages Crashed</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      {{#each crawlers}}
+        <tr>
+          <td><b>{{customId}}</b></td>
+          <td>{{executions.total}}</td>
+          <td>{{stats.pagesCrawled}}</td>
+          <td>{{stats.pagesFailed}}</td>
+          <td>{{stats.pagesCrashed}}</td>
+          <td><button type="button" class="btn btn-outline-primary" data-toggle="collapse" data-target=".collapse_row_{{@index}}">Tags</button></td>
+        </tr>
+          {{#each crawlersByTagStats}}
+          <tr class="collapse collapse_row_{{@index}}">
+            <td>Tag: {{tag}}</td>
+            <td>{{executionsCount}}</td>
+            <td>{{stats.pagesCrawled}}</td>
+            <td>{{stats.pagesFailed}}</td>
+            <td>{{stats.pagesCrashed}}</td>
+            <td></td>
+          </tr>
+          {{/each}}
+      {{/each}}
+      </tbody>
+    </table>
+  </div>
+</div> <!-- /container -->
+</body></html>
