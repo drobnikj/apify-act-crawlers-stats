@@ -1,9 +1,11 @@
 const Apify = require('apify');
 const request = require('request-promise');
-const moment = require('moment');
+//const moment = require('moment');
+const moment = require('moment-timezone');
 const Handlebars = require('handlebars');
-
-const PERIODS = ['week', 'month'];
+// Include format number helpers for handlebars
+const NumeralHelper = require("handlebars.numeral");
+NumeralHelper.registerHelpers(Handlebars);
 
 const htmlTemplate = `
 <!DOCTYPE html>
@@ -29,23 +31,23 @@ const htmlTemplate = `
       <tbody>
       <tr>
         <td>Crawlers</td>
-        <td>{{totalStats.crawlersCount}}</td>
+        <td>{{number totalStats.crawlersCount}}</td>
       </tr>
       <tr>
         <td>Executions</td>
-        <td>{{totalStats.executionsCount}}</td>
+        <td>{{number totalStats.executionsCount}}</td>
       </tr>
       <tr>
         <td>Crawled Pages</td>
-        <td>{{totalStats.stats.pagesCrawled}}</td>
+        <td>{{number totalStats.stats.pagesCrawled}}</td>
       </tr>
       <tr>
         <td>Pages Failed</td>
-        <td>{{totalStats.stats.pagesFailed}}</td>
+        <td>{{number totalStats.stats.pagesFailed}}</td>
       </tr>
       <tr>
         <td>Pages Crashed</td>
-        <td>{{totalStats.stats.pagesCrashed}}</td>
+        <td>{{number totalStats.stats.pagesCrashed}}</td>
       </tr>
       </tbody>
     </table>
@@ -65,24 +67,24 @@ const htmlTemplate = `
       </thead>
       <tbody>
       {{#each crawlers}}
-        <tr>
-          <td><b>{{customId}}</b></td>
-          <td>{{executions.total}}</td>
-          <td>{{stats.pagesCrawled}}</td>
-          <td>{{stats.pagesFailed}}</td>
-          <td>{{stats.pagesCrashed}}</td>
-          <td><button type="button" class="btn btn-outline-primary" data-toggle="collapse" data-target=".collapse_row_{{@index}}">Tags</button></td>
-        </tr>
-          {{#each crawlersByTagStats}}
-          <tr class="collapse collapse_row_{{@../index}}">
-            <td>tag: {{tag}}</td>
-            <td>{{executionsCount}}</td>
-            <td>{{stats.pagesCrawled}}</td>
-            <td>{{stats.pagesFailed}}</td>
-            <td>{{stats.pagesCrashed}}</td>
-            <td></td>
-          </tr>
-          {{/each}}
+      <tr>
+        <td><b>{{customId}}</b></td>
+        <td>{{number executions.total}}</td>
+        <td>{{number stats.pagesCrawled}}</td>
+        <td>{{number stats.pagesFailed}}</td>
+        <td>{{number stats.pagesCrashed}}</td>
+        <td><button type="button" class="btn btn-outline-primary" data-toggle="collapse" data-target=".collapse_row_{{@index}}">Tags</button></td>
+      </tr>
+      {{#each crawlersByTagStats}}
+      <tr class="collapse collapse_row_{{@../index}}">
+        <td>tag: {{tag}}</td>
+        <td>{{number executionsCount}}</td>
+        <td>{{number stats.pagesCrawled}}</td>
+        <td>{{number stats.pagesFailed}}</td>
+        <td>{{number stats.pagesCrashed}}</td>
+        <td></td>
+      </tr>
+      {{/each}}
       {{/each}}
       </tbody>
     </table>
@@ -91,10 +93,13 @@ const htmlTemplate = `
 </body></html>
 `;
 
+const PERIODS = ['day', 'week', 'month'];
+
 const createFilename = (period, from, to) => {
     let filename = `${period}_${from.year()}`;
-    if (['week', 'month'].includes(period)) filename += `_${from.month() + 1}`;
+    if (['day', 'week', 'month'].includes(period)) filename += `_${from.month() + 1}`;
     if (period === 'week') filename += `_${from.date() + 1}-${to.date() + 1}`;
+    if (period === 'day') filename += `_${from.date() + 1}`;
     return filename;
 };
 
@@ -201,6 +206,8 @@ Apify.main(async () => {
         delete crawler.statsByTag;
         return crawler;
     });
+    // Sort by crawledPages
+    htmlContext.crawlers.sort((a, b) =>  b.stats.pagesCrawled - a.stats.pagesCrawled);
     const template = Handlebars.compile(htmlTemplate);
     const html = template(htmlContext);
     // Save stats to key value store
