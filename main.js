@@ -74,8 +74,8 @@ const htmlTemplate = `
           <td><button type="button" class="btn btn-outline-primary" data-toggle="collapse" data-target=".collapse_row_{{@index}}">Tags</button></td>
         </tr>
           {{#each crawlersByTagStats}}
-          <tr class="collapse collapse_row_{{@index}}">
-            <td>Tag: {{tag}}</td>
+          <tr class="collapse collapse_row_{{@../index}}">
+            <td>tag: {{tag}}</td>
             <td>{{executionsCount}}</td>
             <td>{{stats.pagesCrawled}}</td>
             <td>{{stats.pagesFailed}}</td>
@@ -115,8 +115,9 @@ Apify.main(async () => {
         return;
     }
 
-    const FROM = moment().startOf(input.period);
-    const TO = moment().endOf(input.period);
+    const issueDate = input.date || new Date();
+    const FROM = moment(issueDate).startOf(input.period);
+    const TO = moment(issueDate).endOf(input.period);
     const CRAWLERS_STATS = {};
     const STATS_TOTAL = {
         stats: {},

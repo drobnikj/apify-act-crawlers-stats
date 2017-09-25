@@ -66,8 +66,8 @@
           <td><button type="button" class="btn btn-outline-primary" data-toggle="collapse" data-target=".collapse_row_{{@index}}">Tags</button></td>
         </tr>
           {{#each crawlersByTagStats}}
-          <tr class="collapse collapse_row_{{@index}}">
-            <td>Tag: {{tag}}</td>
+          <tr class="collapse collapse_row_{{@../index}}">
+            <td>tag: {{tag}}</td>
             <td>{{executionsCount}}</td>
             <td>{{stats.pagesCrawled}}</td>
             <td>{{stats.pagesFailed}}</td>
