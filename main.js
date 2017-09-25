@@ -169,7 +169,7 @@ Apify.main(async () => {
                 }
             }
             const lastItem = executions.items.pop() || {};
-            if (!moment(lastItem.finishedAt).isBetween(FROM, TO)
+            if (moment(lastItem.finishedAt).isBefore(FROM)
                 || (executions.count + executions.offset) >= executions.total
                 || executions.count === 0) break;
             offset = offset + limit;
