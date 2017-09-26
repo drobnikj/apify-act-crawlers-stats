@@ -1,7 +1,6 @@
 const Apify = require('apify');
 const request = require('request-promise');
-//const moment = require('moment');
-const moment = require('moment-timezone');
+const moment = require('moment');
 const Handlebars = require('handlebars');
 // Include format number helpers for handlebars
 const NumeralHelper = require("handlebars.numeral");
@@ -31,23 +30,23 @@ const htmlTemplate = `
       <tbody>
       <tr>
         <td>Crawlers</td>
-        <td>{{number totalStats.crawlersCount}}</td>
+        <td>{{number crawlersCount}}</td>
       </tr>
       <tr>
         <td>Executions</td>
-        <td>{{number totalStats.executionsCount}}</td>
+        <td>{{number executionsCount}}</td>
       </tr>
       <tr>
         <td>Crawled Pages</td>
-        <td>{{number totalStats.stats.pagesCrawled}}</td>
+        <td>{{number stats.pagesCrawled}}</td>
       </tr>
       <tr>
         <td>Pages Failed</td>
-        <td>{{number totalStats.stats.pagesFailed}}</td>
+        <td>{{number stats.pagesFailed}}</td>
       </tr>
       <tr>
         <td>Pages Crashed</td>
-        <td>{{number totalStats.stats.pagesCrashed}}</td>
+        <td>{{number stats.pagesCrashed}}</td>
       </tr>
       </tbody>
     </table>
@@ -93,13 +92,13 @@ const htmlTemplate = `
 </body></html>
 `;
 
-const PERIODS = ['day', 'week', 'month'];
+const PERIODS = ['day', 'isoWeek', 'month'];
 
 const createFilename = (period, from, to) => {
-    let filename = `${period}_${from.year()}`;
-    if (['day', 'week', 'month'].includes(period)) filename += `_${from.month() + 1}`;
-    if (period === 'week') filename += `_${from.date() + 1}-${to.date() + 1}`;
-    if (period === 'day') filename += `_${from.date() + 1}`;
+    let filename = `${period}_${moment(from).year()}`;
+    if (['day', 'isoWeek', 'month'].includes(period)) filename += `_${moment(from).month() + 1}`;
+    if (period === 'isoWeek') filename += `_${moment(from).date() + 1}-${moment(to).date() + 1}`;
+    if (period === 'day') filename += `_${moment(from).date() + 1}`;
     return filename;
 };
 
@@ -123,13 +122,15 @@ Apify.main(async () => {
     const issueDate = input.date || new Date();
     const FROM = moment(issueDate).startOf(input.period);
     const TO = moment(issueDate).endOf(input.period);
-    const CRAWLERS_STATS = {};
+    const filename = createFilename(input.period, FROM, TO);
     const STATS_TOTAL = {
+        from: FROM.toDate(),
+        to: TO.toDate(),
         stats: {},
         executionsCount: 0,
-        crawlersCount: 0
+        crawlersCount: 0,
+        crawlersStats: {}
     };
-    const filename = createFilename(input.period, FROM, TO);
 
     // Get all crawlers
     const crawlers = await Apify.client.crawlers.listCrawlers({});
@@ -145,11 +146,12 @@ Apify.main(async () => {
         };
 
         // Aggregate stats for all executions
-        let limit = 100;
+        let limit = 1000;
         let offset = 0;
         while (true) {
             const executions = await Apify.client.crawlers.getListOfExecutions({ crawlerId, limit, offset, desc: 1 });
-            console.log(`Aggregate executions from crawler ${crawlerStats.customId}, offset: ${offset}, limit: ${limit}`);
+            console.log(`Aggregate executions from crawler ${crawlerStats.customId}, offset: ${offset}, limit: ${limit}, count: ${executions.count}`);
+            let olderExecutionsCount = 0;
             for (let execution of executions.items) {
                 // Check if execution finished in requested period
                 if (moment(execution.finishedAt).isBetween(FROM, TO)) {
@@ -171,12 +173,11 @@ Apify.main(async () => {
                     } else {
                         crawlerStats.executions[execution.status.toLowerCase()] = 1;
                     }
+                } else if (moment(execution.finishedAt).isBefore(FROM)) {
+                    olderExecutionsCount++;
                 }
             }
-            const lastItem = executions.items.pop() || {};
-            if (moment(lastItem.finishedAt).isBefore(FROM)
-                || (executions.count + executions.offset) >= executions.total
-                || executions.count === 0) break;
+            if (olderExecutionsCount >= parseInt(executions.count) || parseInt(executions.count) === 0) break;
             offset = offset + limit;
             // Sleep - avoid rate limit errors
             await new Promise((resolve, reject) => setTimeout(resolve, 100));
@@ -184,18 +185,21 @@ Apify.main(async () => {
 
         if (crawlerStats.executions.total) {
             STATS_TOTAL.crawlersCount++;
-            CRAWLERS_STATS[crawlerId] = crawlerStats;
+            STATS_TOTAL.crawlersStats[crawlerId] = crawlerStats;
         }
     }
 
+    // Save stats to key value store
+    await Apify.client.keyValueStores.putRecord({ storeId, key: `${filename}_data`, body: JSON.stringify(STATS_TOTAL), contentType: 'application/json; charset=utf-8' });
+
     // Generate HTML page with stats
     const htmlContext = {
-        from: FROM.format('YYYY-MM-DD'),
-        to: TO.format('YYYY-MM-DD'),
-        crawlers: Object.values(CRAWLERS_STATS),
-        crawlersByTag: [],
-        totalStats: STATS_TOTAL,
-
+        from: moment(STATS_TOTAL.from).format('YYYY-MM-DD'),
+        to: moment(STATS_TOTAL.to).format('YYYY-MM-DD'),
+        stats: STATS_TOTAL.stats,
+        executionsCount: STATS_TOTAL.executionsCount,
+        crawlersCount: STATS_TOTAL.crawlersCount,
+        crawlers: Object.values(STATS_TOTAL.crawlersStats),
     };
     htmlContext.crawlers.map((crawler) => {
         crawler.crawlersByTagStats = [];
@@ -210,8 +214,6 @@ Apify.main(async () => {
     htmlContext.crawlers.sort((a, b) =>  b.stats.pagesCrawled - a.stats.pagesCrawled);
     const template = Handlebars.compile(htmlTemplate);
     const html = template(htmlContext);
-    // Save stats to key value store
-    await Apify.client.keyValueStores.putRecord({ storeId, key: `${filename}_data`, body: JSON.stringify(CRAWLERS_STATS), contentType: 'application/json; charset=utf-8' });
     await Apify.client.keyValueStores.putRecord({ storeId, key: `${filename}.html`, body: html, contentType: 'text/html' });
     console.log(`Done, stats were uploaded key value storeId: ${storeId}`);
 });

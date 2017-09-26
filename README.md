@@ -17,7 +17,7 @@ Example:
 
 - Required
 - Selected period of aggregation
-- You can use "month" or "week".
+- You can use `day`, `month` or `isoWeek`.
 
 ### `date`
 
