@@ -1,0 +1,24 @@
+{
+  "name": "apify-act-crawlers-stats",
+  "version": "1.0.0",
+  "description": "Apify act aggregate stats from Apify crawlers by selected period. It generates html page with crawlers stats.",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drobnikj/apify-act-crawlers-stats.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/drobnikj/apify-act-crawlers-stats/issues"
+  },
+  "homepage": "https://github.com/drobnikj/apify-act-crawlers-stats#readme",
+  "dependencies": {
+    "apify": "^0.4.29",
+    "handlebars": "^4.0.11",
+    "moment": "undefined"
+  }
+}

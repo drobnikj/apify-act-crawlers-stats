@@ -1,5 +1,4 @@
 const Apify = require('apify');
-const request = require('request-promise');
 const moment = require('moment');
 const Handlebars = require('handlebars');
 // Include format number helpers for handlebars

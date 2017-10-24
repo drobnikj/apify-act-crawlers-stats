@@ -1,6 +1,6 @@
 # apify-act-crawlers-stats
 
-Apify act aggregate stats from Apify crawlers by selected period.
+Apify act aggregate stats from Apify crawlers by selected period. It generates html page with crawlers stats.
 
 ## Input
 
