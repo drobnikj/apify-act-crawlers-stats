@@ -1,6 +1,7 @@
 const Apify = require('apify');
 const moment = require('moment');
 const Handlebars = require('handlebars');
+const fs = require('fs');
 // Include format number helpers for handlebars
 const NumeralHelper = require("handlebars.numeral");
 NumeralHelper.registerHelpers(Handlebars);
