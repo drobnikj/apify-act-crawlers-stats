@@ -19,6 +19,7 @@
   "dependencies": {
     "apify": "^0.4.29",
     "handlebars": "^4.0.11",
+    "handlebars.numeral": "0.2.0",
     "moment": "^2.19.1"
   }
 }
