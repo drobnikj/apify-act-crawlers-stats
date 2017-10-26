@@ -36,8 +36,13 @@ Apify.main(async () => {
     }
 
     const issueDate = input.date || new Date();
-    const FROM = moment(issueDate).startOf(input.period);
-    const TO = moment(issueDate).endOf(input.period);
+    let FROM = moment(issueDate).startOf(input.period);
+    let TO = moment(issueDate).endOf(input.period);
+    if (input.finishedPeriod) {
+        const [number, period] = (input.period === 'isoWeek') ? [1, 'week'] : [1, input.period];
+        FROM = moment(FROM).subtract(number, period);
+        TO = moment(TO).subtract(number, period);
+    }
     const filename = createFilename(input.period, FROM, TO);
     const STATS_TOTAL = {
         from: FROM.toDate(),
@@ -131,5 +136,9 @@ Apify.main(async () => {
     const template = Handlebars.compile(htmlTemplate);
     const html = template(htmlContext);
     await Apify.client.keyValueStores.putRecord({ storeId, key: `${filename}.html`, body: html, contentType: 'text/html' });
+    await Apify.setValue('OUTPUT', {
+        htmlStatsUrl: `https://api.apify.com/v2/key-value-stores/${storeId}/records/${filename}.html?rawBody=1`,
+        statsUrl: `https://api.apify.com/v2/key-value-stores/${storeId}/records/${filename}_data?rawBody=1`,
+    });
     console.log(`Done, stats were uploaded key value storeId: ${storeId}`);
 });

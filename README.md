@@ -19,6 +19,12 @@ Example:
 - Selected period of aggregation
 - You can use `day`, `month` or `isoWeek`.
 
+### `finishedPeriod`
+
+- Optional
+- If `true` act aggregates the nearest finished period, otherwise aggregates current period.
+- By default is `false`
+
 ### `date`
 
 - Optional
@@ -32,8 +38,8 @@ Example:
 
 ## Output
 
-Act saves output to key value store.
-There are 2 types of output:
+Act saves stats to key value store.
+Act `OUTPUT` is object with attributes:
 
-- html page with stats
-- data in JSON format
+`htmlStatsUrl` - html page with stats url
+`statsUrl` - data in JSON format url
