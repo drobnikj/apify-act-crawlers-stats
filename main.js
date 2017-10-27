@@ -141,6 +141,8 @@ Apify.main(async () => {
     await Apify.setValue('OUTPUT', {
         htmlStatsUrl: `https://api.apify.com/v2/key-value-stores/${storeId}/records/${filename}.html?rawBody=1`,
         statsUrl: `https://api.apify.com/v2/key-value-stores/${storeId}/records/${filename}_data?rawBody=1`,
+        from: htmlContext.from,
+        to: htmlContext.to
     });
     console.log(`Done, stats were uploaded key value storeId: ${storeId}`);
 });
