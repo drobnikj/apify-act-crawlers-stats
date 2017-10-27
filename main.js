@@ -53,6 +53,8 @@ Apify.main(async () => {
         crawlersStats: {}
     };
 
+    console.log(`Aggregates stats from ${moment(FROM).format('YYYY-MM-DD')} to ${moment(TO).format('YYYY-MM-DD')}`);
+
     // Get all crawlers
     const crawlers = await Apify.client.crawlers.listCrawlers({});
     for (let crawler of crawlers.items) {
