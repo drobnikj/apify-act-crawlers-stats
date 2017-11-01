@@ -65,6 +65,7 @@ Apify.main(async () => {
             statsByTag: {},
             executions: {
                 total: 0,
+                list: [],
             },
         };
 
@@ -89,6 +90,10 @@ Apify.main(async () => {
                         crawlerStats.statsByTag[tag].stats[key] = crawlerStats.statsByTag[tag].stats[key] ? crawlerStats.statsByTag[tag].stats[key] + execution.stats[key] : execution.stats[key];
                     });
                     crawlerStats.executions.total++;
+                    crawlerStats.executions.list.push({
+                        _id: execution._id,
+                        finishedAt: execution.finishedAt,
+                    });
                     crawlerStats.statsByTag[tag].executionsCount++;
                     STATS_TOTAL.executionsCount++;
                     if (crawlerStats.executions[execution.status.toLowerCase()]) {
@@ -100,7 +105,13 @@ Apify.main(async () => {
                     olderExecutionsCount++;
                 }
             }
-            if (olderExecutionsCount >= parseInt(executions.count) || parseInt(executions.count) === 0) break;
+            if (olderExecutionsCount >= parseInt(executions.count) || parseInt(executions.count) === 0) {
+                crawlerStats.lastPage ={
+                    limit,
+                    offset
+                };
+                break;
+            }
             offset = offset + limit;
             // Sleep - avoid rate limit errors
             await new Promise((resolve, reject) => setTimeout(resolve, 100));
