@@ -35,14 +35,14 @@ Apify.main(async () => {
         return;
     }
 
-    const issueDate = input.date || new Date();
-    let FROM = moment(issueDate).startOf(input.period);
-    let TO = moment(issueDate).endOf(input.period);
+    let issueDate = input.date || new Date();
     if (input.finishedPeriod) {
         const [number, period] = (input.period === 'isoWeek') ? [1, 'week'] : [1, input.period];
-        FROM = moment(FROM).subtract(number, period);
-        TO = moment(TO).subtract(number, period);
+        issueDate = moment(issueDate).subtract(number, period);
     }
+    const FROM = moment(issueDate).startOf(input.period);
+    const TO = moment(issueDate).endOf(input.period);
+
     const filename = createFilename(input.period, FROM, TO);
     const STATS_TOTAL = {
         from: FROM.toDate(),
